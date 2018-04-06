@@ -1,0 +1,20 @@
+{
+  "name": "fetch-json-timeout",
+  "version": "0.0.1",
+  "description": "Use fetch to get JSON data in a timely fasion",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gumm/fetch-json-timeout.git"
+  },
+  "keywords": [
+    "fetch",
+    "json",
+    "timeout"
+  ],
+  "main": "main.js",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "node-fetch": "^2.1.1",
+    "base-64": "*"
+  }
+}
