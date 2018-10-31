@@ -58,15 +58,6 @@ const getJson = response => {
 
 
 /**
- * @param {string} s
- * @throws
- */
-const throwErr = s => {
-  throw s
-};
-
-
-/**
  * @param {function(*=):*} cb
  * @returns {function(*=): *}
  */
@@ -96,8 +87,8 @@ module.exports = (uName = undefined, pWord = undefined) => {
     const req = new fetch.Request(uri.toString());
 
     let cTmOut = a => a;
-    const timeout = () => new Promise(() => {
-      const tid = setTimeout(throwErr, to, 'Fetch Timeout');
+    const timeout = () => new Promise((resolve, reject) => {
+      const tid = setTimeout(reject, to, 'Fetch Timeout');
       cTmOut = () => clearTimeout(tid);
     });
 
@@ -108,10 +99,11 @@ module.exports = (uName = undefined, pWord = undefined) => {
         })
         .then(checkStatus)
         .then(getJson)
-        .then(callbackAndData(cb));
+        .then(callbackAndData(cb))
+        .catch(e => console.log('Data Error', e));
 
     return Promise.race([f, timeout()]).catch(err => {
-      console.error('JSON Fetch Errors:', err)
+      console.log('JSON Fetch Errors:', err)
     });
   };
 
