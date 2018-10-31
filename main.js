@@ -12,12 +12,16 @@ const jsonInit = ([uName, pWord]) => {
   const h = new fetch.Headers();
   h.append('Content-type', 'application/json');
   h.append('X-Requested-With', 'XMLHttpRequest');
-  h.append('Authorization', 'Basic ' + base64.encode(`${uName}:${pWord}`));
+  if (uName && pWord) {
+    h.append('Authorization', 'Basic ' + base64.encode(`${uName}:${pWord}`));
+  }
   const rep = {
     cache: 'no-cache',
     headers: h,
-    credentials: 'include',
   };
+  if (uName && pWord) {
+    rep['credentials'] = 'include'
+  }
 
   return (verb = 'GET', obj = undefined) => {
     const r = Object.assign({method: verb}, rep);
@@ -77,7 +81,7 @@ const callbackAndData = cb => data => {
  * @param {!string} pWord
  * @returns {function(string, string, number= Function=, Object=): Promise<T>}
  */
-module.exports = (uName, pWord) => {
+module.exports = (uName = undefined, pWord = undefined) => {
   const init = jsonInit([uName, pWord]);
 
   /**
