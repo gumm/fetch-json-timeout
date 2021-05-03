@@ -51,9 +51,20 @@ const checkStatus = response => {
  * @return {!Promise}
  */
 const getJson = response => {
-  return response.json().then(
-      data => Promise.resolve(data),
-      err => Promise.reject(`Could not get JSON from response: ${err}`));
+    return response.json().then(
+        data => Promise.resolve(data),
+    ).catch(
+        err => {
+          const contentLength = response.headers.get('content-length');
+          const code = response.status;
+          if ([201, 202, 204].includes(code) &&
+              contentLength.toString() === '0') {
+            Promise.resolve({})
+          } else {
+            Promise.reject(response)
+          }
+        }
+    )
 };
 
 
