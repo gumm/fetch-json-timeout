@@ -1,7 +1,8 @@
 {
   "name": "fetch-json-timeout",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Use fetch to get JSON data in a timely fashion",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gumm/fetch-json-timeout.git"
@@ -15,10 +16,20 @@
     "json",
     "timeout"
   ],
+  "scripts": {
+    "test": "mocha --recursive ./test/",
+    "rollup": "npx rollup -c",
+    "build": "npm run test && npm run rollup"
+  },
   "main": "main.js",
   "license": "Apache-2.0",
   "dependencies": {
-    "node-fetch": "^2.6.1",
-    "base-64": "*"
+    "base-64": "^1.0.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "mocha": "^8.4.0",
+    "rollup": "^2.49.0"
   }
 }

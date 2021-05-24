@@ -1,32 +1,40 @@
+'use strict';
+
+var base64 = require('base-64');
+var fetch = require('node-fetch');
+
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+var base64__default = /*#__PURE__*/_interopDefaultLegacy(base64);
+var fetch__default = /*#__PURE__*/_interopDefaultLegacy(fetch);
+
 /**
  * Wrapper around fetch API for getting JSON data.
  */
-import base64 from 'base-64';
-import fetch from 'node-fetch';
 
 /**
  * @param {!Object} cred
  * @return {!Function}
  */
 const jsonInit = ([uName, pWord]) => {
-  const h = new fetch.Headers();
+  const h = new fetch__default['default'].Headers();
   h.append('Content-type', 'application/json');
   h.append('X-Requested-With', 'XMLHttpRequest');
   if (uName && pWord) {
-    h.append('Authorization', 'Basic ' + base64.encode(`${uName}:${pWord}`));
+    h.append('Authorization', 'Basic ' + base64__default['default'].encode(`${uName}:${pWord}`));
   }
   const rep = {
     cache: 'no-cache',
     headers: h,
   };
   if (uName && pWord) {
-    rep['credentials'] = 'include'
+    rep['credentials'] = 'include';
   }
 
   return (verb = 'GET', obj = undefined) => {
     const r = Object.assign({method: verb}, rep);
     if (obj) {
-      r.body = JSON.stringify(obj)
+      r.body = JSON.stringify(obj);
     }
     return r;
   };
@@ -58,10 +66,8 @@ const getJson = response => {
           const contentLength = response.headers.get('content-length');
           const code = response.status;
           if ([201, 202, 204].includes(code) &&
-              contentLength.toString() === '0') {
-            Promise.resolve({})
-          } else {
-            Promise.reject(response)
+              contentLength.toString() === '0') ; else {
+            Promise.reject(response);
           }
         }
     )
@@ -83,7 +89,7 @@ const callbackAndData = cb => data => {
  * @param {!string} pWord
  * @returns {function(string, string, number= Function=, Object=): Promise<T>}
  */
-export default (uName = undefined, pWord = undefined) => {
+var main = (uName = undefined, pWord = undefined) => {
   const init = jsonInit([uName, pWord]);
 
   /**
@@ -95,7 +101,7 @@ export default (uName = undefined, pWord = undefined) => {
    * @returns {Promise<T>}
    */
   const func = (verb, uri, to = 60000, cb = () => null, opt_pl = undefined) => {
-    const req = new fetch.Request(uri.toString());
+    const req = new fetch__default['default'].Request(uri.toString());
 
     let cTmOut = a => a;
     const timeout = () => new Promise((resolve, reject) => {
@@ -103,7 +109,7 @@ export default (uName = undefined, pWord = undefined) => {
       cTmOut = () => clearTimeout(tid);
     });
 
-    const f = fetch(req, init(verb, opt_pl))
+    const f = fetch__default['default'](req, init(verb, opt_pl))
         .then(d => {
           cTmOut();
           return d;
@@ -114,9 +120,13 @@ export default (uName = undefined, pWord = undefined) => {
         .catch(e => console.log('Data Error', e));
 
     return Promise.race([f, timeout()]).catch(err => {
-      console.log('JSON Fetch Errors:', err)
+      console.log('JSON Fetch Errors:', err);
     });
   };
 
   return func;
 };
+
+module.exports = main;
+
+module.exports = Object.assign({}, module.exports, exports);
