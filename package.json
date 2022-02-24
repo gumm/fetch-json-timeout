@@ -1,6 +1,6 @@
 {
   "name": "fetch-json-timeout",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "description": "Use fetch to get JSON data in a timely fashion",
   "type": "module",
   "repository": {
@@ -16,20 +16,21 @@
     "json",
     "timeout"
   ],
-  "scripts": {
-    "test": "mocha --recursive ./test/",
-    "rollup": "npx rollup -c",
-    "build": "npm run test && npm run rollup"
-  },
   "main": "main.js",
   "license": "Apache-2.0",
   "dependencies": {
     "base-64": "^1.0.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^3.2.0",
+    "timeout-signal": "^1.1.0"
   },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^13.0.0",
-    "mocha": "^8.4.0",
-    "rollup": "^2.49.0"
+    "@rollup/plugin-node-resolve": "^13.1.3",
+    "mocha": "^9.2.1",
+    "rollup": "^2.68.0"
+  },
+  "scripts": {
+    "test": "mocha --recursive ./test/",
+    "rollup": "npx rollup -c",
+    "build": "npm run test && npm run rollup"
   }
 }

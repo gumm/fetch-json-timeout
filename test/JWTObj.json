@@ -1,0 +1,9 @@
+{
+  "uri":"https://some.api.endpoint/api/v3/tokens/login/",
+  "refreshUri": "https://some.api.endpoint/api/v3/tokens/refresh/",
+  "verb": "POST",
+  "payload": {
+    "email": "some.email@address.org",
+    "password": "some_fancy_obscure_password"
+  }
+}
