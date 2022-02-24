@@ -1,7 +1,7 @@
 # fetch-json-timeout
 
-## Version 3 
-v3 is a major update that will break existing implementations.
+## Version 4 
+v4 is a major update that will break existing implementations.
 In particular, it returns a promise instead of an object when invoked:
 
 ```javascript
@@ -11,7 +11,7 @@ const fetcher = await fetchJson();
 const data = await fetcher('GET', url);
 ```
 
-v3 also supports opinionated JWT token authentication, and refresh.
+v4 also supports opinionated JWT token authentication, and refresh.
 Internally it keeps track of token expiery and refreshes it if it had expired.
 ```javascript
 import fetchJson from 'fetch-json-timeout';

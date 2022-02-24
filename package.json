@@ -1,6 +1,6 @@
 {
   "name": "fetch-json-timeout",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Use fetch to get JSON data in a timely fashion",
   "type": "module",
   "repository": {
