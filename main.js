@@ -186,7 +186,7 @@ export default async (uName = undefined, pWord = undefined, jwtObj = undefined) 
         .then(checkStatus)
         .then(getJson)
         .then(callbackAndData(cb))
-        .catch(e => console.log('Data Error', e));
+        .catch(e => console.log(`Data Error: ${verb} ${uri} TIMEOUT:${to}`, e));
 
   };
 
