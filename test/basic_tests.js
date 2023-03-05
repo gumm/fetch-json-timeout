@@ -27,9 +27,24 @@ const getJWTPrefObj = async () => {
 
 describe('Init a fetcher with token payload', () => {
 
+  it('Just the token itself...', async (done) => {
+    const jwtOpts = await getJWTPrefObj();
+    const fetcher = await fetchJson(undefined, undefined, jwtOpts);
+
+    async function myFunc() {
+      const data = await fetcher('GET', 'http://localhost:8000/api/v3/members/memberships/');
+      console.log(data);
+    }
+
+    await new Promise(resolve => setTimeout(myFunc, 9000));
+
+    console.log(fetcher);
+    done();
+  }).timeout(15000);
+
   it('promise resolves with payload', async () => {
     const jwtOpts = await getJWTPrefObj();
-    const url = jwtOpts.uri;
+    const url = jwtOpts.testUrl;
     const expected = jwtOpts.expectedResponse;
 
     const fetcher = await fetchJson(undefined, undefined, jwtOpts);

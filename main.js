@@ -12,7 +12,10 @@ const parseJwt = token => {
   const jsonPayload = decodeURIComponent(Buffer.from(base64, 'base64').toString().split('').map(function(c) {
     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
-  return JSON.parse(jsonPayload).exp;
+  const tokenPayload = JSON.parse(jsonPayload);
+  const exp =  tokenPayload.exp;
+  const refreshExp =  tokenPayload.refresh_exp;
+  return [exp, refreshExp];
 };
 
 
@@ -35,7 +38,7 @@ const refreshJWTToken = async (jwtObj, currentToken) => {
       .then(getJson)
       .catch(async e => {
         console.log('Token Refresh Error. Asking for wholly new token...', e);
-        return await getJWTToken(jwtObj)
+        return await getJWTToken(jwtObj);
       });
 }
 
@@ -71,6 +74,7 @@ const jsonInit = async ([uName, pWord], jwtObj) => {
     cache: 'no-cache'
   };
   let tokenExpr = 0;
+  let tokenRefreshExpr = 0;
   let JWTToken = "";
 
   if (uName && pWord) {
@@ -83,7 +87,7 @@ const jsonInit = async ([uName, pWord], jwtObj) => {
       JWTToken = tpl.token;
       h.Authorization = 'Bearer ' + JWTToken;
       rep.credentials = 'include';
-      tokenExpr = parseJwt(JWTToken);
+      [tokenExpr, tokenRefreshExpr] = parseJwt(JWTToken);
     }
   }
 
@@ -94,9 +98,11 @@ const jsonInit = async ([uName, pWord], jwtObj) => {
    * @returns {Promise<void>}
    */
   const checkToken = async () => {
+
     if (jwtObj && tokenExpr > 0) {
       const now =  Math.floor(Date.now() / 1000);
-      if (tokenExpr - now <= 10) {
+      const timeToExpire = tokenExpr - now;
+      if (timeToExpire <= 10) {
         const tokenPayload = await refreshJWTToken(jwtObj, JWTToken);
         updateTokenInfo(tokenPayload);
       }
