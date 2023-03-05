@@ -29,7 +29,7 @@ describe('Init a fetcher with token payload', () => {
 
   it('promise resolves with payload', async () => {
     const jwtOpts = await getJWTPrefObj();
-    const url = jwtOpts.testUrl;
+    const url = jwtOpts.uri;
     const expected = jwtOpts.expectedResponse;
 
     const fetcher = await fetchJson(undefined, undefined, jwtOpts);

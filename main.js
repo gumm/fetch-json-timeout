@@ -33,7 +33,10 @@ const refreshJWTToken = async (jwtObj, currentToken) => {
   return await fetch(url, rep)
       .then(checkStatus)
       .then(getJson)
-      .catch(e => console.log('Token Refresh Error', e));
+      .catch(async e => {
+        console.log('Token Refresh Error. Asking for wholly new token...', e);
+        return await getJWTToken(jwtObj)
+      });
 }
 
 const getJWTToken = async jwtObj => {
@@ -84,6 +87,12 @@ const jsonInit = async ([uName, pWord], jwtObj) => {
     }
   }
 
+  /**
+   * This is potentially problematic. We have no control over how regularly this
+   * gets called, and if it does not get called regularly enough, the token may expire
+   * beyond its capability to be refreshed.
+   * @returns {Promise<void>}
+   */
   const checkToken = async () => {
     if (jwtObj && tokenExpr > 0) {
       const now =  Math.floor(Date.now() / 1000);

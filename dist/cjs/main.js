@@ -4,12 +4,6 @@ var base64 = require('base-64');
 var fetch = require('node-fetch');
 var timeoutSignal = require('timeout-signal');
 
-function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-var base64__default = /*#__PURE__*/_interopDefaultLegacy(base64);
-var fetch__default = /*#__PURE__*/_interopDefaultLegacy(fetch);
-var timeoutSignal__default = /*#__PURE__*/_interopDefaultLegacy(timeoutSignal);
-
 /**
  * Wrapper around fetch API for getting JSON data.
  */
@@ -39,10 +33,13 @@ const refreshJWTToken = async (jwtObj, currentToken) => {
     })
   };
 
-  return await fetch__default["default"](url, rep)
+  return await fetch(url, rep)
       .then(checkStatus)
       .then(getJson)
-      .catch(e => console.log('Token Refresh Error', e));
+      .catch(async e => {
+        console.log('Token Refresh Error. Asking for wholly new token...', e);
+        return await getJWTToken(jwtObj)
+      });
 };
 
 const getJWTToken = async jwtObj => {
@@ -57,7 +54,7 @@ const getJWTToken = async jwtObj => {
     body: JSON.stringify(jwtObj.payload)
   };
 
-  return await fetch__default["default"](url, rep)
+  return await fetch(url, rep)
       .then(checkStatus)
       .then(getJson)
       .catch(e => console.log('Token Fetch Error', e));
@@ -80,7 +77,7 @@ const jsonInit = async ([uName, pWord], jwtObj) => {
   let JWTToken = "";
 
   if (uName && pWord) {
-    h.Authorization = 'Basic ' + base64__default["default"].encode(`${uName}:${pWord}`);
+    h.Authorization = 'Basic ' + base64.encode(`${uName}:${pWord}`);
     rep.credentials = 'include';
   }
 
@@ -93,6 +90,12 @@ const jsonInit = async ([uName, pWord], jwtObj) => {
     }
   };
 
+  /**
+   * This is potentially problematic. We have no control over how regularly this
+   * gets called, and if it does not get called regularly enough, the token may expire
+   * beyond its capability to be refreshed.
+   * @returns {Promise<void>}
+   */
   const checkToken = async () => {
     if (jwtObj && tokenExpr > 0) {
       const now =  Math.floor(Date.now() / 1000);
@@ -115,7 +118,7 @@ const jsonInit = async ([uName, pWord], jwtObj) => {
     rep.headers = h;
     const r = Object.assign({
       method: verb,
-      signal: timeoutSignal__default["default"](to)
+      signal: timeoutSignal(to)
     }, rep);
     if (obj) {
       r.body = JSON.stringify(obj);
@@ -191,11 +194,11 @@ var main = async (uName = undefined, pWord = undefined, jwtObj = undefined) => {
     const req = uri.toString();
     const options = await init(to, verb, opt_pl);
 
-    return fetch__default["default"](req, options)
+    return fetch(req, options)
         .then(checkStatus)
         .then(getJson)
         .then(callbackAndData(cb))
-        .catch(e => console.log('Data Error', e));
+        .catch(e => console.log(`Data Error: ${verb} ${uri} TIMEOUT:${to}`, e));
 
   };
 
