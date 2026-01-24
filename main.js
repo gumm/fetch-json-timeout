@@ -2,8 +2,31 @@
  * Wrapper around fetch API for getting JSON data.
  */
 import base64 from 'base-64';
-import fetch from 'node-fetch';
 import timeoutSignal from 'timeout-signal';
+
+
+export class TimeoutError extends Error {
+  constructor(verb, uri, timeout) {
+    super(`Timeout: ${verb} ${uri} after ${timeout}ms`);
+    this.name = 'TimeoutError';
+    this.timeout = timeout;
+  }
+}
+
+export class HttpError extends Error {
+  constructor(verb, uri, status, statusText) {
+    super(`${verb} ${uri} ${status} (${statusText})`);
+    this.name = 'HttpError';
+    this.status = status;
+  }
+}
+
+export class NetworkError extends Error {
+  constructor(verb, uri, cause) {
+    super(`${verb} ${uri}: ${cause.message}`, {cause});
+    this.name = 'NetworkError';
+  }
+}
 
 
 const parseJwt = token => {
@@ -110,8 +133,13 @@ const jsonInit = async ([uName, pWord], jwtObj) => {
   }
 
   if (jwtObj) {
-    const tokenPayload = await getJWTToken(jwtObj);
-    updateTokenInfo(tokenPayload);
+    if (jwtObj.token && !jwtObj.uri) {
+      h.Authorization = 'Bearer ' + jwtObj.token;
+      rep.credentials = 'include';
+    } else {
+      const tokenPayload = await getJWTToken(jwtObj);
+      updateTokenInfo(tokenPayload);
+    }
   }
 
   return async (to = 60000, verb = 'GET', obj = undefined) => {
@@ -139,8 +167,11 @@ const checkStatus = response => {
   if (response.ok) {
     return Promise.resolve(response);
   } else {
-    return Promise.reject(new Error(
-        `${response.url} ${response.status} (${response.statusText})`));
+    const err = new Error(
+        `${response.url} ${response.status} (${response.statusText})`);
+    err.status = response.status;
+    err.statusText = response.statusText;
+    return Promise.reject(err);
   }
 };
 
@@ -157,9 +188,13 @@ const getJson = response => {
           const code = response.status;
           if ([201, 202, 204].includes(code) &&
               contentLength.toString() === '0') {
-            Promise.resolve({})
+            return Promise.resolve({});
           } else {
-            Promise.reject(response)
+            const e = new Error(
+                `${response.url} ${code} JSON parse failed`);
+            e.status = code;
+            e.statusText = response.statusText;
+            return Promise.reject(e);
           }
         }
     )
@@ -201,7 +236,15 @@ export default async (uName = undefined, pWord = undefined, jwtObj = undefined) 
         .then(checkStatus)
         .then(getJson)
         .then(callbackAndData(cb))
-        .catch(e => console.log(`Data Error: ${verb} ${uri} TIMEOUT:${to}`, e));
+        .catch(e => {
+          if (e.name === 'AbortError') {
+            throw new TimeoutError(verb, uri, to);
+          }
+          if (e.status) {
+            throw new HttpError(verb, uri, e.status, e.statusText);
+          }
+          throw new NetworkError(verb, uri, e);
+        });
 
   };
 

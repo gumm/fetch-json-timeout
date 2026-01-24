@@ -1,9 +1,9 @@
 {
-  "uri":"https://some.api.endpoint/api/v3/tokens/login/",
-  "refreshUri": "https://some.api.endpoint/api/v3/tokens/refresh/",
+  "uri":"http://127.0.0.1:8000/api/v4/auth/login/",
+  "refreshUri": "http://127.0.0.1:8000/api/v4/auth/refresh/",
   "verb": "POST",
   "payload": {
-    "email": "some.email@address.org",
-    "password": "some_fancy_obscure_password"
+    "email": "someone@some.where",
+    "password": "jingle_jangle"
   }
 }

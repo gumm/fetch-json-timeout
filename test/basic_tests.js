@@ -1,16 +1,11 @@
 import assert from 'assert';
-import fetchJson from '../main.js';
+import fetchJson, {TimeoutError, HttpError, NetworkError} from '../main.js';
 import {promises as fs} from "fs";
 
 // README:
 // -----------------------------------------------------------------------------
 // Replace JWTObj.json with an equivalent object with your
 // JWT credentials and info.
-// For ease of testing, you can add two fields to this object that defines the
-// test URLs to use for JWT token testing, and the expected response from that
-// endpoint.
-//  "testUrl": "https://some.test.endpoint/api/get_data/",
-//  "expectedResponse": { "here": [ "is", "your", "response" ] }
 // -----------------------------------------------------------------------------
 
 
@@ -27,30 +22,30 @@ const getJWTPrefObj = async () => {
 
 describe('Init a fetcher with token payload', () => {
 
-  it('Just the token itself...', async (done) => {
+  it('immediate authenticated fetch returns data', async () => {
     const jwtOpts = await getJWTPrefObj();
     const fetcher = await fetchJson(undefined, undefined, jwtOpts);
-
-    async function myFunc() {
-      const data = await fetcher('GET', 'http://localhost:8000/api/v3/members/memberships/');
-      console.log(data);
-    }
-
-    await new Promise(resolve => setTimeout(myFunc, 9000));
-
-    console.log(fetcher);
-    done();
-  }).timeout(15000);
-
-  it('promise resolves with payload', async () => {
-    const jwtOpts = await getJWTPrefObj();
-    const url = jwtOpts.testUrl;
-    const expected = jwtOpts.expectedResponse;
-
-    const fetcher = await fetchJson(undefined, undefined, jwtOpts);
-    const data = await fetcher('GET', url);
-    assert.deepEqual(data, expected);
+    const data = await fetcher('GET', 'http://127.0.0.1:8000/api/v3/members/memberships/');
+    assert.ok(data, 'Expected a response');
+    assert.ok(Array.isArray(data.results), 'Expected results array');
   });
+
+  it('fetch still works after token nears expiry', async () => {
+    const jwtOpts = await getJWTPrefObj();
+    const fetcher = await fetchJson(undefined, undefined, jwtOpts);
+
+    // First call succeeds immediately
+    const first = await fetcher('GET', 'http://127.0.0.1:8000/api/v3/members/memberships/');
+    assert.ok(first, 'First fetch should return data');
+
+    // Wait long enough that the token should need refreshing
+    await new Promise(resolve => setTimeout(resolve, 9000));
+
+    // Second call should still succeed (token refresh kicks in if needed)
+    const second = await fetcher('GET', 'http://127.0.0.1:8000/api/v3/members/memberships/');
+    assert.ok(second, 'Fetch after delay should still return data');
+    assert.ok(Array.isArray(second.results), 'Expected results array after refresh');
+  }).timeout(15000);
 
   it('callback resolves with payload', async () => {
     const jwtOpts = await getJWTPrefObj();
@@ -72,16 +67,54 @@ describe('Init a fetcher without credentials', () => {
     const fetcher = await fetchJson();
     const data = await fetcher('GET', url);
     console.log(data);
-  });
+  }).timeout(10000);
 
   it('callback resolves with payload', async () => {
     const fetcher = await fetchJson();
     fetcher('GET', url, undefined, console.log);
   });
 
-  it('failure is an option', async () => {
+  it('non-2xx rejects with HttpError', async () => {
     const fetcher = await fetchJson();
-    fetcher('GET', 'https://this.wont.resolve', 5000).then(console.log);
+    try {
+      await fetcher('GET', 'https://httpbin.org/status/404');
+      assert.fail('Should have thrown');
+    } catch (e) {
+      assert.ok(e instanceof HttpError, `Expected HttpError, got ${e.constructor.name}`);
+      assert.strictEqual(e.status, 404);
+    }
+  });
+
+  it('network error rejects with NetworkError', async () => {
+    const fetcher = await fetchJson();
+    try {
+      await fetcher('GET', 'https://this.wont.resolve', 5000);
+      assert.fail('Should have thrown');
+    } catch (e) {
+      assert.ok(e instanceof NetworkError, `Expected NetworkError, got ${e.constructor.name}`);
+      assert.ok(e.cause, 'Expected a cause');
+    }
+  });
+
+  it('timeout rejects with TimeoutError', async () => {
+    const fetcher = await fetchJson();
+    try {
+      await fetcher('GET', 'https://httpbin.org/delay/5', 500);
+      assert.fail('Should have thrown');
+    } catch (e) {
+      assert.ok(e instanceof TimeoutError, `Expected TimeoutError, got ${e.constructor.name}`);
+      assert.strictEqual(e.timeout, 500);
+    }
+  });
+
+});
+
+describe('Init a fetcher with a static service token', () => {
+
+  it('attaches the bearer token to requests', async () => {
+    const fetcher = await fetchJson(undefined, undefined, {token: 'my-service-token'});
+    const data = await fetcher('GET', 'https://httpbin.org/headers');
+    assert.strictEqual(data.headers.Authorization, 'Bearer my-service-token');
   });
 
 });
